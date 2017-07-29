@@ -1,3 +1,5 @@
 target
 *.zip
 *.jar
+*.iml
+.DS_Store
