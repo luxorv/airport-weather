@@ -1,4 +1,4 @@
-package com.crossover.trial.weather;
+package com.crossover.trial.weather.model;
 
 /**
  * encapsulates sensor information for a particular location

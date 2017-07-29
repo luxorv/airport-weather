@@ -1,5 +1,7 @@
 package com.crossover.trial.weather;
 
+import com.crossover.trial.weather.controller.WeatherCollectorEndpoint;
+import com.crossover.trial.weather.controller.WeatherQueryEndpoint;
 import org.junit.Assert;
 import org.junit.Test;
 import org.w3c.dom.Document;

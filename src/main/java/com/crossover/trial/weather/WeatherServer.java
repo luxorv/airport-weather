@@ -1,9 +1,9 @@
 package com.crossover.trial.weather;
 
+import com.crossover.trial.weather.controller.RestWeatherCollectorEndpoint;
+import com.crossover.trial.weather.controller.RestWeatherQueryEndpoint;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.http.server.*;
-import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
-import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 

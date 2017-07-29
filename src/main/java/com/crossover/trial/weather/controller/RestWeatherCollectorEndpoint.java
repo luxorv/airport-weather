@@ -1,5 +1,10 @@
-package com.crossover.trial.weather;
+package com.crossover.trial.weather.controller;
 
+import com.crossover.trial.weather.model.AirportData;
+import com.crossover.trial.weather.model.AtmosphericInformation;
+import com.crossover.trial.weather.model.DataPoint;
+import com.crossover.trial.weather.model.DataPointType;
+import com.crossover.trial.weather.error.WeatherException;
 import com.google.gson.Gson;
 
 import javax.ws.rs.Path;
@@ -8,8 +13,6 @@ import javax.ws.rs.core.Response;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import static com.crossover.trial.weather.RestWeatherQueryEndpoint.*;
 
 /**
  * A REST implementation of the WeatherCollector API. Accessible only to airport weather collection
@@ -46,7 +49,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     @Override
     public Response getAirports() {
         Set<String> retval = new HashSet<>();
-        for (AirportData ad : airportData) {
+        for (AirportData ad : RestWeatherQueryEndpoint.airportData) {
             retval.add(ad.getIata());
         }
         return Response.status(Response.Status.OK).entity(retval).build();
@@ -55,7 +58,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 
     @Override
     public Response getAirport(@PathParam("iata") String iata) {
-        AirportData ad = findAirportData(iata);
+        AirportData ad = RestWeatherQueryEndpoint.findAirportData(iata);
         return Response.status(Response.Status.OK).entity(ad).build();
     }
 
@@ -93,8 +96,8 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
      * @throws WeatherException if the update can not be completed
      */
     public void addDataPoint(String iataCode, String pointType, DataPoint dp) throws WeatherException {
-        int airportDataIdx = getAirportDataIdx(iataCode);
-        AtmosphericInformation ai = atmosphericInformation.get(airportDataIdx);
+        int airportDataIdx = RestWeatherQueryEndpoint.getAirportDataIdx(iataCode);
+        AtmosphericInformation ai = RestWeatherQueryEndpoint.atmosphericInformation.get(airportDataIdx);
         updateAtmosphericInformation(ai, pointType, dp);
     }
 
@@ -170,10 +173,10 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
      */
     public static AirportData addAirport(String iataCode, double latitude, double longitude) {
         AirportData ad = new AirportData();
-        airportData.add(ad);
+        RestWeatherQueryEndpoint.airportData.add(ad);
 
         AtmosphericInformation ai = new AtmosphericInformation();
-        atmosphericInformation.add(ai);
+        RestWeatherQueryEndpoint.atmosphericInformation.add(ai);
         ad.setIata(iataCode);
         ad.setLatitude(latitude);
         ad.setLatitude(longitude);
