@@ -1,5 +1,5 @@
 target
 *.zip
 *.jar
-*.iml
+weather.iml
 .DS_Store
