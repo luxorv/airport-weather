@@ -29,6 +29,8 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     public final static Logger LOGGER = Logger.getLogger("WeatherQuery");
 
+
+
     /** shared gson json to object factory */
     public final Gson gson = new Gson();
 
@@ -38,7 +40,6 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     /** atmospheric information for each airport, idx corresponds with airportData */
     protected List<AtmosphericInformation> atmosphericInformation = Collections.synchronizedList(new LinkedList<>());
-
 
     /**
      * Internal performance counter to better understand most requested information, this map can be improved but
@@ -55,9 +56,6 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
         this.atmosphericInformationService = new AtmosphericInformationServiceImpl();
     }
 
-    static {
-        init();
-    }
     /**
      * Retrieve service health including total size of valid data points and request frequency information.
      *
@@ -127,17 +125,6 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
         AirportData airportData = airportService.findAirportData(iata);
         requestFrequency.put(airportData, requestFrequency.getOrDefault(airportData, 0) + 1);
         radiusFreq.put(radius, radiusFreq.getOrDefault(radius, 0));
-    }
-
-    /**
-     * A dummy init method that loads hard coded data
-     */
-    public static void init() {
-        RestWeatherCollectorEndpoint.addAirport("BOS", 42.364347, -71.005181);
-        RestWeatherCollectorEndpoint.addAirport("EWR", 40.6925, -74.168667);
-        RestWeatherCollectorEndpoint.addAirport("JFK", 40.639751, -73.778925);
-        RestWeatherCollectorEndpoint.addAirport("LGA", 40.777245, -73.872608);
-        RestWeatherCollectorEndpoint.addAirport("MMU", 40.79935, -74.4148747);
     }
 
 }

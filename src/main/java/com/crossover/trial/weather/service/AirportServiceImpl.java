@@ -27,7 +27,15 @@ public class AirportServiceImpl implements AirportService {
 
   public final static Logger LOGGER = Logger.getLogger(AirportServiceImpl.class.getName());
 
-  public AirportServiceImpl() {}
+  public AirportServiceImpl() { this.init(); }
+
+  private void init() {
+    addAirport("BOS", "42.364347", "-71.005181");
+    addAirport("EWR", "40.6925", "-74.168667");
+    addAirport("JFK", "40.639751", "-73.778925");
+    addAirport("LGA", "40.777245", "-73.872608");
+    addAirport("MMU", "40.79935", "-74.4148747");
+  }
 
   /**
    * Given an iataCode find the airport data
@@ -103,6 +111,7 @@ public class AirportServiceImpl implements AirportService {
     Status responseStatus = Status.OK;
 
 
+    return responseStatus;
   }
 
   /**
