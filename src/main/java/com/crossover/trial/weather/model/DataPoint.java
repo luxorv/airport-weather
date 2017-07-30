@@ -21,7 +21,7 @@ public class DataPoint {
     public int count = 0;
 
     /** private constructor, use the builder to create this object */
-    private DataPoint() { }
+    public DataPoint() { }
 
     protected DataPoint(int first, int second, int mean, int third, int count) {
         this.setFirst(first);
@@ -36,7 +36,7 @@ public class DataPoint {
         return mean;
     }
 
-    protected void setMean(double mean) { this.mean = mean; }
+    public void setMean(double mean) { this.mean = mean; }
 
     /** 1st quartile -- useful as a lower bound */
     public int getFirst() {

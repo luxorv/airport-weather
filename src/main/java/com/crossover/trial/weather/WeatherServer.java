@@ -2,9 +2,11 @@ package com.crossover.trial.weather;
 
 import com.crossover.trial.weather.controller.RestWeatherCollectorEndpoint;
 import com.crossover.trial.weather.controller.RestWeatherQueryEndpoint;
+import com.crossover.trial.weather.utils.ApplicationBinder;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.http.server.*;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
@@ -32,6 +34,7 @@ public class WeatherServer {
             final ResourceConfig resourceConfig = new ResourceConfig();
             resourceConfig.register(RestWeatherCollectorEndpoint.class);
             resourceConfig.register(RestWeatherQueryEndpoint.class);
+            resourceConfig.register(JacksonFeature.class);
 
             HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URL), resourceConfig, false);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {

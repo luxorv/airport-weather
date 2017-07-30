@@ -2,9 +2,18 @@ package com.crossover.trial.weather.controller;
 
 import com.crossover.trial.weather.model.AirportData;
 import com.crossover.trial.weather.model.AtmosphericInformation;
+import com.crossover.trial.weather.service.AirportService;
+import com.crossover.trial.weather.service.AirportServiceImpl;
+import com.crossover.trial.weather.service.AtmosphericInformationService;
+import com.crossover.trial.weather.service.AtmosphericInformationServiceImpl;
+import com.crossover.trial.weather.utils.ConstantHelper;
 import com.google.gson.Gson;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.logging.Logger;
@@ -20,17 +29,16 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     public final static Logger LOGGER = Logger.getLogger("WeatherQuery");
 
-    /** earth radius in KM */
-    public static final double R = 6372.8;
-
     /** shared gson json to object factory */
-    public static final Gson gson = new Gson();
+    public final Gson gson = new Gson();
 
-    /** all known airports */
-    protected static List<AirportData> airportData = new ArrayList<>();
+    private AirportService airportService;
+
+    private AtmosphericInformationService atmosphericInformationService;
 
     /** atmospheric information for each airport, idx corresponds with airportData */
-    protected static List<AtmosphericInformation> atmosphericInformation = new LinkedList<>();
+    protected List<AtmosphericInformation> atmosphericInformation = Collections.synchronizedList(new LinkedList<>());
+
 
     /**
      * Internal performance counter to better understand most requested information, this map can be improved but
@@ -38,9 +46,14 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      * we don't want to write this to disk, but will pull it off using a REST request and aggregate with other
      * performance metrics {@link #ping()}
      */
-    public static Map<AirportData, Integer> requestFrequency = new HashMap<AirportData, Integer>();
+    public Map<AirportData, Integer> requestFrequency = new HashMap<AirportData, Integer>();
 
-    public static Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
+    public Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
+
+    public RestWeatherQueryEndpoint() {
+        this.airportService = new AirportServiceImpl();
+        this.atmosphericInformationService = new AtmosphericInformationServiceImpl();
+    }
 
     static {
         init();
@@ -54,26 +67,16 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
     public String ping() {
         Map<String, Object> retval = new HashMap<>();
 
-        int datasize = 0;
-        for (AtmosphericInformation ai : atmosphericInformation) {
-            // we only count recent readings
-            if (ai.getCloudCover() != null
-                || ai.getHumidity() != null
-                || ai.getPressure() != null
-                || ai.getPrecipitation() != null
-                || ai.getTemperature() != null
-                || ai.getWind() != null) {
-                // updated in the last day
-                if (ai.getLastUpdateTime() > System.currentTimeMillis() - 86400000) {
-                    datasize++;
-                }
-            }
-        }
+        long datasize = atmosphericInformationService.getAllAtmosphericInformation().stream()
+            .filter(atmospheicInfo ->
+                atmospheicInfo.getLastUpdateTime() > System.currentTimeMillis() - ConstantHelper.ONE_DAY)
+            .count();
+
         retval.put("datasize", datasize);
 
         Map<String, Double> freq = new HashMap<>();
         // fraction of queries
-        for (AirportData data : airportData) {
+        for (AirportData data : airportService.getAllAirportData()) {
             double frac = (double)requestFrequency.getOrDefault(data, 0) / requestFrequency.size();
             freq.put(data.getIata(), frac);
         }
@@ -102,29 +105,15 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      *
      * @return a list of atmospheric information
      */
-    @Override
-    public Response weather(String iata, String radiusString) {
-        System.out.print("Calling weather with iata " + iata);
+    @GET
+    @Path("/weather/{iata}/{radius}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response weather(@PathParam("iata") String iata, @PathParam("radius") String radiusString) {
         double radius = radiusString == null || radiusString.trim().isEmpty() ? 0 : Double.valueOf(radiusString);
         updateRequestFrequency(iata, radius);
-
-        List<AtmosphericInformation> retval = new ArrayList<>();
-        if (radius == 0) {
-            int idx = getAirportDataIdx(iata);
-            retval.add(atmosphericInformation.get(idx));
-        } else {
-            AirportData ad = findAirportData(iata);
-            for (int i=0;i< airportData.size(); i++){
-                if (calculateDistance(ad, airportData.get(i)) <= radius){
-                    AtmosphericInformation ai = atmosphericInformation.get(i);
-                    if (ai.getCloudCover() != null || ai.getHumidity() != null || ai.getPrecipitation() != null
-                       || ai.getPressure() != null || ai.getTemperature() != null || ai.getWind() != null){
-                        retval.add(ai);
-                    }
-                }
-            }
-        }
-        return Response.status(Response.Status.OK).entity(retval).build();
+        return Response.status(Response.Status.OK).entity(
+            atmosphericInformationService.getAtmosphericInformationAroundAirportInRadius(iata, radius)
+        ).build();
     }
 
 
@@ -135,58 +124,15 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      * @param radius query radius
      */
     public void updateRequestFrequency(String iata, Double radius) {
-        AirportData airportData = findAirportData(iata);
+        AirportData airportData = airportService.findAirportData(iata);
         requestFrequency.put(airportData, requestFrequency.getOrDefault(airportData, 0) + 1);
         radiusFreq.put(radius, radiusFreq.getOrDefault(radius, 0));
     }
 
     /**
-     * Given an iataCode find the airport data
-     *
-     * @param iataCode as a string
-     * @return airport data or null if not found
-     */
-    public static AirportData findAirportData(String iataCode) {
-        return airportData.stream()
-            .filter(ap -> ap.getIata().equals(iataCode))
-            .findFirst().orElse(null);
-    }
-
-    /**
-     * Given an iataCode find the airport data
-     *
-     * @param iataCode as a string
-     * @return airport data or null if not found
-     */
-    public static int getAirportDataIdx(String iataCode) {
-        AirportData ad = findAirportData(iataCode);
-        return airportData.indexOf(ad);
-    }
-
-    /**
-     * Haversine distance between two airports.
-     *
-     * @param ad1 airport 1
-     * @param ad2 airport 2
-     * @return the distance in KM
-     */
-    public double calculateDistance(AirportData ad1, AirportData ad2) {
-        double deltaLat = Math.toRadians(ad2.latitude - ad1.latitude);
-        double deltaLon = Math.toRadians(ad2.longitude - ad1.longitude);
-        double a =  Math.pow(Math.sin(deltaLat / 2), 2) + Math.pow(Math.sin(deltaLon / 2), 2)
-                * Math.cos(ad1.latitude) * Math.cos(ad2.latitude);
-        double c = 2 * Math.asin(Math.sqrt(a));
-        return R * c;
-    }
-
-    /**
      * A dummy init method that loads hard coded data
      */
-    protected static void init() {
-        airportData.clear();
-        atmosphericInformation.clear();
-        requestFrequency.clear();
-
+    public static void init() {
         RestWeatherCollectorEndpoint.addAirport("BOS", 42.364347, -71.005181);
         RestWeatherCollectorEndpoint.addAirport("EWR", 40.6925, -74.168667);
         RestWeatherCollectorEndpoint.addAirport("JFK", 40.639751, -73.778925);
