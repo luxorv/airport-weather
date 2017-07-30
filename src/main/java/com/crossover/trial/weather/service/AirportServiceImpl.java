@@ -110,6 +110,11 @@ public class AirportServiceImpl implements AirportService {
   public Status deleteAirport(String iataCode) {
     Status responseStatus = Status.OK;
 
+    if (airportDataMap.containsKey(iataCode)) {
+      airportDataMap.remove(iataCode);
+    } else {
+      responseStatus = Status.NOT_FOUND;
+    }
 
     return responseStatus;
   }

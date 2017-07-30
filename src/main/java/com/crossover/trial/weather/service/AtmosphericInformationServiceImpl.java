@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -24,7 +25,7 @@ public class AtmosphericInformationServiceImpl implements AtmosphericInformation
 
   public final static Logger LOGGER = Logger.getLogger(AtmosphericInformationServiceImpl.class.getName());
 
-  private Map<String, AtmosphericInformation> atmosphericInformationMap;
+  private Map<String, AtmosphericInformation> atmosphericInformationMap = new ConcurrentHashMap<>();
 
   private AirportService airportService;
 

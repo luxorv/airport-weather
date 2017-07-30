@@ -93,7 +93,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
   @DELETE
   @Path("/airport/{iata}")
   public Response deleteAirport(@PathParam("iata") String iata) {
-    return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+    return Response.status(airportService.deleteAirport(iata)).build();
   }
 
   @Override
