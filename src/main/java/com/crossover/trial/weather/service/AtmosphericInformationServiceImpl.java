@@ -2,14 +2,13 @@ package com.crossover.trial.weather.service;
 
 import com.crossover.trial.weather.model.AirportData;
 import com.crossover.trial.weather.model.AtmosphericInformation;
+import com.crossover.trial.weather.model.storage.ConcurrentAtmosphericInfoStorage;
 import com.crossover.trial.weather.model.DataPoint;
 import com.crossover.trial.weather.utils.ReflectionUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -23,14 +22,12 @@ import javax.ws.rs.core.Response.Status;
  */
 public class AtmosphericInformationServiceImpl implements AtmosphericInformationService {
 
-  public final static Logger LOGGER = Logger.getLogger(AtmosphericInformationServiceImpl.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(AtmosphericInformationServiceImpl.class.getName());
 
-  private Map<String, AtmosphericInformation> atmosphericInformationMap = new ConcurrentHashMap<>();
-
-  private AirportService airportService;
+  private ConcurrentAtmosphericInfoStorage<String, AtmosphericInformation> atmosphericInformationMap;
 
   public AtmosphericInformationServiceImpl() {
-    this.airportService = new AirportServiceImpl();
+    atmosphericInformationMap = ConcurrentAtmosphericInfoStorage.getInstance();
   }
 
   /**
@@ -42,28 +39,26 @@ public class AtmosphericInformationServiceImpl implements AtmosphericInformation
    */
   @Override
   public AtmosphericInformation getAtmosphericInformationForAirport(String iataCode) {
-    return atmosphericInformationMap.get(iataCode);
+    return atmosphericInformationMap.getOrDefault(iataCode, null);
   }
 
   /**
-   * Retrieve the most up to date atmospheric information from the given airport and other airports in the given
-   * radius.
+   * Retrieve the most up to date atmospheric information from the given airports
    *
-   * @param iataCode the three letter airport code
-   * @param radius the radius, in km, from which to collect weather data
+   * @param airportData list of airports to retrieve the atmospheric information
    *
    * @return a list of {@link AtmosphericInformation} from the requested airport and
    * airports in the given radius
+   *
    */
   @Override
-  public List<AtmosphericInformation> getAtmosphericInformationAroundAirportInRadius(
-      String iataCode, double radius) {
+  public List<AtmosphericInformation> getAtmosphericInformationForAirports(
+      List<AirportData> airportData) {
+    // return a list of atmospheric information of the given airports
     return new ArrayList<AtmosphericInformation>() {{
-      // Get all airports inside a given radius.
-      for (AirportData airportData: airportService.getAirportDataInRadius(iataCode, radius)) {
-        // Add each airport's atmospheric information.
-        add(atmosphericInformationMap.get(airportData.getIata()));
-      }
+      airportData.stream().forEach(airportData ->
+          add(atmosphericInformationMap
+              .getOrDefault(airportData.getIata(), new AtmosphericInformation())));
     }};
   }
 
@@ -91,8 +86,7 @@ public class AtmosphericInformationServiceImpl implements AtmosphericInformation
     /* Insert a new association of airport iataCode with an Atmospheric information
      * in the case the atmospheric information is not given just create an empty association
      */
-    atmosphericInformationMap.put(
-        iataCode,
+    atmosphericInformationMap.putIfAbsent(iataCode,
         atmosphericInformation != null ? atmosphericInformation: new AtmosphericInformation()
     );
   }
@@ -120,7 +114,7 @@ public class AtmosphericInformationServiceImpl implements AtmosphericInformation
 
     try {
       // Get the atmospheric information corresponding to the iataCode
-      atmosphericInformation = atmosphericInformationMap.get(iataCode);
+      atmosphericInformation = atmosphericInformationMap.getOrDefault(iataCode, null);
       // Get the method reference for the given data point
       method = ReflectionUtils.getMethodFromInstance(atmosphericInformation, pointType);
       // Invoke the method for the data point
@@ -129,7 +123,7 @@ public class AtmosphericInformationServiceImpl implements AtmosphericInformation
     } catch (NoSuchMethodException e) {
       // If there's a no such method exception the pointType is incorrect so we return bad request
       responseStatus = Status.BAD_REQUEST;
-      e.printStackTrace();
+      LOGGER.info("Bad request of the data point type " + iataCode);
     } catch (NullPointerException e) {
       // If there's a null pointer exception it means that there's no atmospheric information for
       // the given airport code, a 404 not found is returned because there's no resource for the given

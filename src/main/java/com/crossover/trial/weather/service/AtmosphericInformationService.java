@@ -1,9 +1,11 @@
 package com.crossover.trial.weather.service;
 
+import com.crossover.trial.weather.model.AirportData;
 import com.crossover.trial.weather.model.AtmosphericInformation;
 import com.crossover.trial.weather.model.DataPoint;
 import java.util.List;
 import javax.ws.rs.core.Response.Status;
+import org.glassfish.jersey.spi.Contract;
 
 /**
  * The definition of the Atmospheric Information Service which will make operations on all atmospheric
@@ -12,6 +14,7 @@ import javax.ws.rs.core.Response.Status;
  * @author Victor Polanco
  *
  */
+@Contract
 public interface AtmosphericInformationService {
 
   /**
@@ -24,17 +27,16 @@ public interface AtmosphericInformationService {
   public AtmosphericInformation getAtmosphericInformationForAirport(String iataCode);
 
   /**
-   * Retrieve the most up to date atmospheric information from the given airport and other airports in the given
-   * radius.
+   * Retrieve the most up to date atmospheric information from the given airports
    *
-   * @param iataCode the three letter airport code
-   * @param radius the radius, in km, from which to collect weather data
+   * @param airportData list of airports to retrieve the atmospheric information
    *
    * @return a list of {@link AtmosphericInformation} from the requested airport and
    * airports in the given radius
+   *
    */
-  public List<AtmosphericInformation> getAtmosphericInformationAroundAirportInRadius(
-      String iataCode, double radius);
+  public List<AtmosphericInformation> getAtmosphericInformationForAirports(
+      List<AirportData> airportData);
 
   /**
    * Retrieve all the atmospheric information available

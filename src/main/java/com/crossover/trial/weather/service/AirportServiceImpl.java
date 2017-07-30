@@ -1,16 +1,13 @@
 package com.crossover.trial.weather.service;
 
 import com.crossover.trial.weather.model.AirportData;
+import com.crossover.trial.weather.model.AtmosphericInformation;
+import com.crossover.trial.weather.model.storage.ConcurrentAirportDataStorage;
 import com.crossover.trial.weather.utils.ConstantHelper;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 /**
@@ -23,11 +20,17 @@ import javax.ws.rs.core.Response.Status;
 public class AirportServiceImpl implements AirportService {
 
   /** all known airports */
-  private Map<String, AirportData> airportDataMap = new ConcurrentHashMap<String, AirportData>();
+  private ConcurrentAirportDataStorage<String, AirportData> airportDataMap;
+
+  private AtmosphericInformationService atmosphericInformationService;
 
   public final static Logger LOGGER = Logger.getLogger(AirportServiceImpl.class.getName());
 
-  public AirportServiceImpl() { this.init(); }
+  public AirportServiceImpl() {
+    airportDataMap = ConcurrentAirportDataStorage.getInstance();
+    atmosphericInformationService = new AtmosphericInformationServiceImpl();
+    this.init();
+  }
 
   private void init() {
     addAirport("BOS", "42.364347", "-71.005181");
@@ -85,11 +88,14 @@ public class AirportServiceImpl implements AirportService {
       convertedLongitude = Double.valueOf(longitude);
 
       // If it was parsed correctly add a new airport to the system
-      airportDataMap.put(iataCode, new AirportData() {{
+      airportDataMap.putIfAbsent(iataCode, new AirportData() {{
         setIata(iataCode);
         setLatitude(convertedLatitude);
         setLongitude(convertedLongitude);
       }});
+      // Add an empty atmospheric information entry for the new airport
+      atmosphericInformationService
+          .addAtmosphericInformationForAirport(iataCode, new AtmosphericInformation());
     } catch (NumberFormatException e) {
       // If there's a number format exception there's a problem with the request!
       responseStatus = Status.BAD_REQUEST;

@@ -5,6 +5,8 @@ import com.crossover.trial.weather.model.DataPointType;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.jvnet.hk2.annotations.Contract;
+import org.jvnet.hk2.annotations.Service;
 
 /**
  * The interface shared to airport weather collection systems.

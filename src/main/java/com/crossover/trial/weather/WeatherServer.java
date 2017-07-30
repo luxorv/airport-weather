@@ -2,7 +2,6 @@ package com.crossover.trial.weather;
 
 import com.crossover.trial.weather.controller.RestWeatherCollectorEndpoint;
 import com.crossover.trial.weather.controller.RestWeatherQueryEndpoint;
-import com.crossover.trial.weather.utils.ApplicationBinder;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.http.server.*;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -25,39 +24,37 @@ import static java.lang.String.*;
  */
 public class WeatherServer {
 
-    private static final String BASE_URL = "http://localhost:9090/";
+  private static final String BASE_URL = "http://localhost:9090/";
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("Starting Weather App local testing server: " + BASE_URL);
+  public static void main(String[] args) {
+    try {
+      System.out.println("Starting Weather App local testing server: " + BASE_URL);
 
-            final ResourceConfig resourceConfig = new ResourceConfig();
-            resourceConfig.register(RestWeatherCollectorEndpoint.class);
-            resourceConfig.register(RestWeatherQueryEndpoint.class);
-            resourceConfig.register(JacksonFeature.class);
+      final ResourceConfig resourceConfig = new ResourceConfig();
+      resourceConfig.register(RestWeatherCollectorEndpoint.class);
+      resourceConfig.register(RestWeatherQueryEndpoint.class);
+      resourceConfig.register(JacksonFeature.class);
 
-            HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URL), resourceConfig, false);
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                server.shutdownNow();
-            }));
+      HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URL), resourceConfig, false);
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdownNow()));
 
-            HttpServerProbe probe = new HttpServerProbe.Adapter() {
-                public void onRequestReceiveEvent(HttpServerFilter filter, Connection connection, Request request) {
-                    System.out.println(request.getRequestURI());
-                }
-            };
-            server.getServerConfiguration().getMonitoringConfig().getWebServerConfig().addProbes(probe);
-
-
-            // the autograder waits for this output before running automated tests, please don't remove it
-            server.start();
-            System.out.println(format("Weather Server started.\n url=%s\n", BASE_URL));
-
-            // blocks until the process is terminated
-            Thread.currentThread().join();
-            server.shutdown();
-        } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(WeatherServer.class.getName()).log(Level.SEVERE, null, ex);
+      HttpServerProbe probe = new HttpServerProbe.Adapter() {
+        public void onRequestReceiveEvent(HttpServerFilter filter, Connection connection, Request request) {
+          System.out.println(request.getRequestURI());
         }
+      };
+      server.getServerConfiguration().getMonitoringConfig().getWebServerConfig().addProbes(probe);
+
+
+      // the autograder waits for this output before running automated tests, please don't remove it
+      server.start();
+      System.out.println(format("Weather Server started.\n url=%s\n", BASE_URL));
+
+      // blocks until the process is terminated
+      Thread.currentThread().join();
+      server.shutdown();
+    } catch (IOException | InterruptedException ex) {
+      Logger.getLogger(WeatherServer.class.getName()).log(Level.SEVERE, null, ex);
     }
+  }
 }

@@ -29,14 +29,17 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     public final static Logger LOGGER = Logger.getLogger("WeatherQuery");
 
-
-
     /** shared gson json to object factory */
     public final Gson gson = new Gson();
 
     private AirportService airportService;
 
     private AtmosphericInformationService atmosphericInformationService;
+
+    public RestWeatherQueryEndpoint() {
+        airportService = new AirportServiceImpl();
+        atmosphericInformationService = new AtmosphericInformationServiceImpl();
+    }
 
     /** atmospheric information for each airport, idx corresponds with airportData */
     protected List<AtmosphericInformation> atmosphericInformation = Collections.synchronizedList(new LinkedList<>());
@@ -50,11 +53,6 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
     public Map<AirportData, Integer> requestFrequency = new HashMap<AirportData, Integer>();
 
     public Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
-
-    public RestWeatherQueryEndpoint() {
-        this.airportService = new AirportServiceImpl();
-        this.atmosphericInformationService = new AtmosphericInformationServiceImpl();
-    }
 
     /**
      * Retrieve service health including total size of valid data points and request frequency information.
@@ -109,11 +107,11 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
     public Response weather(@PathParam("iata") String iata, @PathParam("radius") String radiusString) {
         double radius = radiusString == null || radiusString.trim().isEmpty() ? 0 : Double.valueOf(radiusString);
         updateRequestFrequency(iata, radius);
-        return Response.status(Response.Status.OK).entity(
-            atmosphericInformationService.getAtmosphericInformationAroundAirportInRadius(iata, radius)
-        ).build();
+        List<AirportData> airportData = airportService.getAirportDataInRadius(iata, radius);
+        return Response.status(Response.Status.OK)
+            .entity(atmosphericInformationService.getAtmosphericInformationForAirports(airportData))
+            .build();
     }
-
 
     /**
      * Records information about how often requests are made

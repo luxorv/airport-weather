@@ -7,6 +7,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.jvnet.hk2.annotations.Contract;
 
 /**
  * The query only API for the Weather Server App. This API is made available to the public internet.

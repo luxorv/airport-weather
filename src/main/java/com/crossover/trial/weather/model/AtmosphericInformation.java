@@ -136,4 +136,17 @@ public class AtmosphericInformation {
   public void setLastUpdateTime(long lastUpdateTime) {
     this.lastUpdateTime = lastUpdateTime;
   }
+
+  @Override
+  public String toString() {
+    return "AtmosphericInformation{" +
+        "temperature=" + temperature +
+        ", wind=" + wind +
+        ", humidity=" + humidity +
+        ", precipitation=" + precipitation +
+        ", pressure=" + pressure +
+        ", cloudCover=" + cloudCover +
+        ", lastUpdateTime=" + lastUpdateTime +
+        '}';
+  }
 }

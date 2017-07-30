@@ -4,7 +4,10 @@ import com.google.gson.Gson;
 import java.lang.reflect.Type;
 
 /**
- * Created by Luxorv on 7/30/17.
+ * The implementation of the Gson Factory where we instantiate any Gson Object from a given type
+ *
+ * @author Victor Polanco
+ *
  */
 public class GsonFactory {
 

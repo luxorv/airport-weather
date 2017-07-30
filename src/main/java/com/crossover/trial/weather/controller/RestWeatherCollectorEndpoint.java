@@ -1,8 +1,6 @@
 package com.crossover.trial.weather.controller;
 
 import com.crossover.trial.weather.model.DataPoint;
-import com.crossover.trial.weather.model.DataPointType;
-import com.crossover.trial.weather.error.WeatherException;
 import com.crossover.trial.weather.service.AirportService;
 import com.crossover.trial.weather.service.AirportServiceImpl;
 import com.crossover.trial.weather.service.AtmosphericInformationService;
@@ -25,7 +23,6 @@ import java.util.logging.Logger;
  *
  * @author code test administrator
  */
-
 @Path("/collect")
 public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
   public final static Logger LOGGER = Logger.getLogger(RestWeatherCollectorEndpoint.class.getName());
@@ -35,8 +32,8 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
   private AtmosphericInformationService atmosphericInformationService;
 
   public RestWeatherCollectorEndpoint() {
-    this.airportService = new AirportServiceImpl();
-    this.atmosphericInformationService = new AtmosphericInformationServiceImpl();
+    airportService = new AirportServiceImpl();
+    atmosphericInformationService = new AtmosphericInformationServiceImpl();
   }
 
   @Override

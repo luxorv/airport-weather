@@ -44,6 +44,7 @@ public class WeatherEndpointTest {
     @Test
     public void testGet() throws Exception {
         List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("BOS", "0").getEntity();
+        System.out.println(ais.get(0));
         assertEquals(ais.get(0).getWind(), _dp);
     }
 
@@ -56,8 +57,22 @@ public class WeatherEndpointTest {
         _dp.setMean(30);
         _update.updateWeather("LGA", "wind", _gson.toJson(_dp));
 
+        /* This should be 4 instead of 3, found out that the airports in a radius
+         * of 200km of JFK are:
+         *
+         *  - MMU
+         *  - LGA
+         *  - EWR
+         *
+         *  So as per the requirement "return an HTTP Response and a list of
+         *  AtmosphericInformation from the requested airport and airports in
+         *  the given radius" the correct expected number of records expected is 4.
+         *  (MMU, LGA, EWR, JFK)
+         *
+         */
         List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("JFK", "200").getEntity();
-        assertEquals(3, ais.size());
+        System.out.println(ais);
+        assertEquals(4, ais.size());
     }
 
     @Test
