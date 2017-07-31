@@ -7,6 +7,7 @@ import com.crossover.trial.weather.service.AirportServiceImpl;
 import com.crossover.trial.weather.service.AtmosphericInformationService;
 import com.crossover.trial.weather.service.AtmosphericInformationServiceImpl;
 import com.crossover.trial.weather.utils.ConstantHelper;
+import com.crossover.trial.weather.utils.GsonFactory;
 import com.google.gson.Gson;
 
 import javax.ws.rs.GET;
@@ -28,9 +29,6 @@ import java.util.logging.Logger;
 public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     public final static Logger LOGGER = Logger.getLogger("WeatherQuery");
-
-    /** shared gson json to object factory */
-    public final Gson gson = new Gson();
 
     private AirportService airportService;
 
@@ -89,7 +87,7 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
         }
         retval.put("radius_freq", hist);
 
-        return gson.toJson(retval);
+        return GsonFactory.toJson(retval);
     }
 
     /**

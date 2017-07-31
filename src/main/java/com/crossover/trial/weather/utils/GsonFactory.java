@@ -15,4 +15,8 @@ public class GsonFactory {
     return new Gson().fromJson(jsonString, typeOfT);
   }
 
+  public static String toJson(Object object) {
+    return new Gson().toJson(object);
+  }
+
 }
