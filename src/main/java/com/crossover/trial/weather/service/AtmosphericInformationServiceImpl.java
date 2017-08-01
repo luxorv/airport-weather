@@ -6,7 +6,6 @@ import com.crossover.trial.weather.model.storage.ConcurrentAtmosphericInfoStorag
 import com.crossover.trial.weather.model.DataPoint;
 import com.crossover.trial.weather.utils.ReflectionUtils;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -14,8 +13,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 /**
- * The implementation of the Atmospheric Information Service which will make operations on all atmospheric
- * information available on the system
+ * The implementation of the Atmospheric Information Service which will make operations on all
+ * atmospheric information available on the system
  *
  * @author Victor Polanco
  *
@@ -83,8 +82,11 @@ public class AtmosphericInformationServiceImpl implements AtmosphericInformation
   @Override
   public void addAtmosphericInformationForAirport(String iataCode,
       AtmosphericInformation atmosphericInformation) {
-    /* Insert a new association of airport iataCode with an Atmospheric information
+    /**
+     *
+     * Insert a new association of airport iataCode with an Atmospheric information
      * in the case the atmospheric information is not given just create an empty association
+     *
      */
     atmosphericInformationMap.putIfAbsent(iataCode,
         atmosphericInformation != null ? atmosphericInformation: new AtmosphericInformation()
@@ -106,42 +108,35 @@ public class AtmosphericInformationServiceImpl implements AtmosphericInformation
 
     // Get the lower case of the pointType
     pointType = pointType.toLowerCase();
-    // Get the atmospheric information method definition for a given code
-    Method method = null;
-    // Get the atmospheric information for a given data code
-    AtmosphericInformation atmosphericInformation = null;
+    // Set an OK status code
     Status responseStatus = Response.Status.OK;
 
     try {
       // Get the atmospheric information corresponding to the iataCode
-      atmosphericInformation = atmosphericInformationMap.getOrDefault(iataCode, null);
-      // Get the method reference for the given data point
-      method = ReflectionUtils.getMethodFromInstance(atmosphericInformation, pointType);
-      // Invoke the method for the data point
-      method.invoke(atmosphericInformation, dataPoint);
-      // Being catch branches
+      AtmosphericInformation atmosphericInformation = atmosphericInformationMap
+          .getOrDefault(iataCode, null);
+      // Set the property to the atmospheric information.
+      ReflectionUtils.setPropertyToAtmosphericInfo(atmosphericInformation, pointType, dataPoint);
     } catch (NoSuchMethodException e) {
       // If there's a no such method exception the pointType is incorrect so we return bad request
       responseStatus = Status.BAD_REQUEST;
-      LOGGER.info("Bad request of the data point type " + iataCode);
-    } catch (NullPointerException e) {
-      // If there's a null pointer exception it means that there's no atmospheric information for
-      // the given airport code, a 404 not found is returned because there's no resource for the given
-      // code
-      responseStatus = Status.NOT_FOUND;
-      LOGGER.info("No such airport data found on the system " + iataCode);
+      LOGGER.info("Bad request of the data point type " + iataCode + " - " + pointType);
     } catch (IllegalAccessException e) {
       // The pointType is incorrect so we return bad request
       responseStatus = Status.BAD_REQUEST;
       LOGGER.info("Invalid data point type for atmospheric information " + pointType);
       e.printStackTrace();
     } catch (InvocationTargetException e) {
-      // The pointType is incorrect so we return bad request
-      responseStatus = Status.BAD_REQUEST;
-      LOGGER.info("Invalid data point type for atmospheric information " + pointType);
-      e.printStackTrace();
+      /**
+       *
+       * If there's a null pointer exception it means that there's no atmospheric information for
+       * the given airport code, a 404 not found is returned because there's no resource for the
+       * given code
+       *
+       **/
+      responseStatus = Status.NOT_FOUND;
+      LOGGER.info("No such airport data found on the system " + iataCode);
     }
-
     return responseStatus;
   }
 }

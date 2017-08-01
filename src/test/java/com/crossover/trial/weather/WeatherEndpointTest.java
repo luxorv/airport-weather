@@ -48,52 +48,76 @@ public class WeatherEndpointTest {
         assertEquals(ais.get(0).getWind(), _dp);
     }
 
-    @Test
-    public void testGetNearby() throws Exception {
-        // check datasize response
-        _update.updateWeather("JFK", "wind", _gson.toJson(_dp));
-        _dp.setMean(40);
-        _update.updateWeather("EWR", "wind", _gson.toJson(_dp));
-        _dp.setMean(30);
-        _update.updateWeather("LGA", "wind", _gson.toJson(_dp));
+  /**
+   * Test NearBy
+   *
+   * Acceptance criteria: The service should return the atmospheric information for all airports near by a
+   * given airport code and radius.
+   *
+   * Request definition: <host_name>:<port>/query/{iataCode}/{radius}
+   *
+   *  This should be 4 instead of 3, found out that the airports in a radius
+   * of 200km of JFK are:
+   *
+   *  - MMU
+   *  - LGA
+   *  - EWR
+   *
+   *  So as per the requirement "return an HTTP Response and a list of
+   *  AtmosphericInformation from the requested airport and airports in
+   *  the given radius" the correct expected number of records expected is 4.
+   *  (MMU, LGA, EWR, JFK)
+   *
+   **/
+  @Test
+  public void testGetNearby() throws Exception {
+    // check datasize response
+    _update.updateWeather("JFK", "wind", _gson.toJson(_dp));
+    _dp.setMean(40);
+    _update.updateWeather("EWR", "wind", _gson.toJson(_dp));
+    _dp.setMean(30);
+    _update.updateWeather("LGA", "wind", _gson.toJson(_dp));
 
-        /* This should be 4 instead of 3, found out that the airports in a radius
-         * of 200km of JFK are:
-         *
-         *  - MMU
-         *  - LGA
-         *  - EWR
-         *
-         *  So as per the requirement "return an HTTP Response and a list of
-         *  AtmosphericInformation from the requested airport and airports in
-         *  the given radius" the correct expected number of records expected is 4.
-         *  (MMU, LGA, EWR, JFK)
-         *
-         */
-        List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("JFK", "200").getEntity();
-        System.out.println(ais);
-        assertEquals(4, ais.size());
-    }
+    List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("JFK", "200").getEntity();
+    System.out.println(ais);
+    assertEquals(4, ais.size());
+  }
 
-    @Test
-    public void testUpdate() throws Exception {
+  /**
+   *  Test Update
+   *
+   * Aceptance criteria:
+   *
+   *  - MMU
+   *  - LGA
+   *  - EWR
+   *
+   *  So as per the requirement "return an HTTP Response and a list of
+   *  AtmosphericInformation from the requested airport and airports in
+   *  the given radius" the correct expected number of records expected is 4.
+   *  (MMU, LGA, EWR, JFK)
+   *
+   **/
+  @Test
+  public void testUpdate() throws Exception {
 
-        DataPoint windDp = new DataPoint.Builder()
-                .withCount(10).withFirst(10).withMedian(20).withLast(30).withMean(22).build();
-        _update.updateWeather("BOS", "wind", _gson.toJson(windDp));
-        _query.weather("BOS", "0").getEntity();
+    DataPoint windDp = new DataPoint.Builder()
+        .withCount(10).withFirst(10).withMedian(20).withLast(30).withMean(22).build();
+    _update.updateWeather("BOS", "wind", _gson.toJson(windDp));
+    _query.weather("BOS", "0").getEntity();
 
-        String ping = _query.ping();
-        JsonElement pingResult = new JsonParser().parse(ping);
-        assertEquals(1, pingResult.getAsJsonObject().get("datasize").getAsInt());
+    String ping = _query.ping();
+    JsonElement pingResult = new JsonParser().parse(ping);
+    System.out.println(ping);
+    assertEquals(1, pingResult.getAsJsonObject().get("datasize").getAsInt());
 
-        DataPoint cloudCoverDp = new DataPoint.Builder()
-                .withCount(4).withFirst(10).withMedian(60).withLast(100).withMean(50).build();
-        _update.updateWeather("BOS", "cloudcover", _gson.toJson(cloudCoverDp));
+    DataPoint cloudCoverDp = new DataPoint.Builder()
+        .withCount(4).withFirst(10).withMedian(60).withLast(100).withMean(50).build();
+    _update.updateWeather("BOS", "cloudcover", _gson.toJson(cloudCoverDp));
 
-        List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("BOS", "0").getEntity();
-        assertEquals(ais.get(0).getWind(), windDp);
-        assertEquals(ais.get(0).getCloudCover(), cloudCoverDp);
-    }
+    List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("BOS", "0").getEntity();
+    assertEquals(ais.get(0).getWind(), windDp);
+    assertEquals(ais.get(0).getCloudCover(), cloudCoverDp);
+  }
 
 }

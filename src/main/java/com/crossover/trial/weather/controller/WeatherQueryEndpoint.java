@@ -22,6 +22,7 @@ public interface WeatherQueryEndpoint {
      * requests for each radius.
      *
      * @return a JSON formatted dict with health information.
+     *
      */
     @GET
     @Path("/ping")

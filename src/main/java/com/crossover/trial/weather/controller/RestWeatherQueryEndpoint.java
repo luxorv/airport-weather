@@ -8,7 +8,6 @@ import com.crossover.trial.weather.service.AtmosphericInformationService;
 import com.crossover.trial.weather.service.AtmosphericInformationServiceImpl;
 import com.crossover.trial.weather.utils.ConstantHelper;
 import com.crossover.trial.weather.utils.GsonFactory;
-import com.google.gson.Gson;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -58,6 +57,8 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      * @return health stats for the service as a string
      */
     @Override
+    @GET
+    @Path("/ping")
     public String ping() {
         Map<String, Object> retval = new HashMap<>();
 

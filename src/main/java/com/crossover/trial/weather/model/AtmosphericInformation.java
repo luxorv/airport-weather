@@ -88,42 +88,42 @@ public class AtmosphericInformation {
     this.cloudCover = cloudCover;
   }
 
-  public void setMessuredTemperature(DataPoint temperature) {
+  public void setMeasuredTemperature(DataPoint temperature) {
     if (temperature.getMean() >= -50 && temperature.getMean() < 100) {
       this.temperature = temperature;
       this.setLastUpdateTime(System.currentTimeMillis());
     }
   }
 
-  public void setMessuredWind(DataPoint wind) {
+  public void setMeasuredWind(DataPoint wind) {
     if (wind.getMean() >= 0) {
       this.wind = wind;
       this.setLastUpdateTime(System.currentTimeMillis());
     }
   }
 
-  public void setMessuredHumidity(DataPoint humidity) {
+  public void setMeasuredHumidity(DataPoint humidity) {
     if (humidity.getMean() >= 0 && humidity.getMean() < 100) {
       this.humidity = humidity;
       this.setLastUpdateTime(System.currentTimeMillis());
     }
   }
 
-  public void setMessuredPrecipitation(DataPoint precipitation) {
+  public void setMeasuredPrecipitation(DataPoint precipitation) {
     if (precipitation.getMean() >= 0 && precipitation.getMean() < 100) {
       this.precipitation = precipitation;
       this.setLastUpdateTime(System.currentTimeMillis());
     }
   }
 
-  public void setMessuredPressure(DataPoint pressure) {
+  public void setMeasuredPressure(DataPoint pressure) {
     if (pressure.getMean() >= 650 && pressure.getMean() < 800) {
       this.pressure = pressure;
       this.setLastUpdateTime(System.currentTimeMillis());
     }
   }
 
-  public void setMessuredCloudCover(DataPoint cloudCover) {
+  public void setMeasuredCloudCover(DataPoint cloudCover) {
     if (cloudCover.getMean() >= 0 && cloudCover.getMean() < 100) {
       this.cloudCover = cloudCover;
       this.setLastUpdateTime(System.currentTimeMillis());
