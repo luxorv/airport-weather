@@ -120,4 +120,11 @@ public class WeatherEndpointTest {
     assertEquals(ais.get(0).getCloudCover(), cloudCoverDp);
   }
 
+    @Test
+    public void testCollectorPing() throws Exception {
+        String ping = _update.ping();
+        JsonElement pingResult = new JsonParser().parse(ping);
+        assertEquals(1, pingResult.getAsJsonObject().get("datasize").getAsInt());
+        assertEquals(5, pingResult.getAsJsonObject().get("iata_freq").getAsJsonObject().entrySet().size());
+    }
 }
