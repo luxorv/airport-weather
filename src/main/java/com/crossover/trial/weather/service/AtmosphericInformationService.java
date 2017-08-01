@@ -8,11 +8,10 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.spi.Contract;
 
 /**
- * The definition of the Atmospheric Information Service which will make operations on all atmospheric
- * information available on the system
+ * The definition of the Atmospheric Information Service which will make operations on all
+ * atmospheric information available on the system
  *
  * @author Victor Polanco
- *
  */
 @Contract
 public interface AtmosphericInformationService {
@@ -21,7 +20,6 @@ public interface AtmosphericInformationService {
    * Given an iataCode find the airport data
    *
    * @param iataCode as a string
-   *
    * @return {@link AtmosphericInformation} or null if not found
    */
   public AtmosphericInformation getAtmosphericInformationForAirport(String iataCode);
@@ -30,10 +28,8 @@ public interface AtmosphericInformationService {
    * Retrieve the most up to date atmospheric information from the given airports
    *
    * @param airportData list of airports to retrieve the atmospheric information
-   *
-   * @return a list of {@link AtmosphericInformation} from the requested airport and
-   * airports in the given radius
-   *
+   * @return a list of {@link AtmosphericInformation} from the requested airport and airports in the
+   *     given radius
    */
   public List<AtmosphericInformation> getAtmosphericInformationForAirports(
       List<AirportData> airportData);
@@ -46,15 +42,14 @@ public interface AtmosphericInformationService {
   public List<AtmosphericInformation> getAllAtmosphericInformation();
 
   /**
-   * Retrieve the most up to date atmospheric information from the given airport and other airports in the given
-   * radius.
+   * Retrieve the most up to date atmospheric information from the given airport and other airports
+   * in the given radius.
    *
    * @param iataCode the three letter airport code
    * @param atmosphericInformation(optional) the atmospheric infomation of the airport
-   *
    */
-  public void addAtmosphericInformationForAirport
-      (String iataCode, AtmosphericInformation atmosphericInformation);
+  public void addAtmosphericInformationForAirport(
+      String iataCode, AtmosphericInformation atmosphericInformation);
 
   /**
    * Update atmospheric information with the given data point for the given point type
@@ -62,10 +57,8 @@ public interface AtmosphericInformationService {
    * @param iataCode the airport to update it's atmospheric information
    * @param pointType the data point type as a string
    * @param dataPoint the actual data point
-   *
    * @return Status code indicating the state of the update
    */
-  public Status updateAtmosphericInformationForAirport
-      (String iataCode, String pointType, DataPoint dataPoint);
-
+  public Status updateAtmosphericInformationForAirport(
+      String iataCode, String pointType, DataPoint dataPoint);
 }

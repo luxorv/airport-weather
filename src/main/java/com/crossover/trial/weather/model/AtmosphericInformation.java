@@ -1,8 +1,6 @@
 package com.crossover.trial.weather.model;
 
-/**
- * encapsulates sensor information for a particular location
- */
+/** encapsulates sensor information for a particular location */
 public class AtmosphericInformation {
 
   /** temperature in degrees celsius */
@@ -26,11 +24,15 @@ public class AtmosphericInformation {
   /** the last time this data was updated, in milliseconds since UTC epoch */
   private long lastUpdateTime;
 
-  public AtmosphericInformation() {
+  public AtmosphericInformation() {}
 
-  }
-
-  protected AtmosphericInformation(DataPoint temperature, DataPoint wind, DataPoint humidity, DataPoint percipitation, DataPoint pressure, DataPoint cloudCover) {
+  protected AtmosphericInformation(
+      DataPoint temperature,
+      DataPoint wind,
+      DataPoint humidity,
+      DataPoint percipitation,
+      DataPoint pressure,
+      DataPoint cloudCover) {
     this.temperature = temperature;
     this.wind = wind;
     this.humidity = humidity;
@@ -133,20 +135,28 @@ public class AtmosphericInformation {
   public long getLastUpdateTime() {
     return this.lastUpdateTime;
   }
+
   public void setLastUpdateTime(long lastUpdateTime) {
     this.lastUpdateTime = lastUpdateTime;
   }
 
   @Override
   public String toString() {
-    return "AtmosphericInformation{" +
-        "temperature=" + temperature +
-        ", wind=" + wind +
-        ", humidity=" + humidity +
-        ", precipitation=" + precipitation +
-        ", pressure=" + pressure +
-        ", cloudCover=" + cloudCover +
-        ", lastUpdateTime=" + lastUpdateTime +
-        '}';
+    return "AtmosphericInformation{"
+        + "temperature="
+        + temperature
+        + ", wind="
+        + wind
+        + ", humidity="
+        + humidity
+        + ", precipitation="
+        + precipitation
+        + ", pressure="
+        + pressure
+        + ", cloudCover="
+        + cloudCover
+        + ", lastUpdateTime="
+        + lastUpdateTime
+        + '}';
   }
 }
