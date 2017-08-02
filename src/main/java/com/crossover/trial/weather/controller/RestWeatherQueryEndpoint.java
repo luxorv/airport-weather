@@ -1,11 +1,7 @@
 package com.crossover.trial.weather.controller;
 
 import com.crossover.trial.weather.model.AirportData;
-import com.crossover.trial.weather.model.AtmosphericInformation;
-import com.crossover.trial.weather.service.AirportService;
-import com.crossover.trial.weather.service.AirportServiceImpl;
-import com.crossover.trial.weather.service.AtmosphericInformationService;
-import com.crossover.trial.weather.service.AtmosphericInformationServiceImpl;
+import com.crossover.trial.weather.service.*;
 import com.crossover.trial.weather.utils.ConstantHelper;
 import com.crossover.trial.weather.utils.GsonFactory;
 
@@ -16,112 +12,105 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The Weather App REST endpoint allows clients to query, update and check health stats. Currently, all data is
- * held in memory. The end point deploys to a single container
+ * The Weather App REST endpoint allows clients to query, update and check health stats. Currently,
+ * all data is held in memory. The end point deploys to a single container
  *
  * @author code test administrator
  */
 @Path("/query")
 public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
-    public final static Logger LOGGER = Logger.getLogger("WeatherQuery");
+  /** Logger for all logs inside this service */
+  public static final Logger LOGGER = Logger.getLogger("WeatherQuery");
 
-    private AirportService airportService;
+  /** Airport service responsible for all operations on airports. */
+  private AirportService airportService;
 
-    private AtmosphericInformationService atmosphericInformationService;
+  /** Atmospheric information service responsible for all operations on atmospheric information. */
+  private AtmosphericInformationService atmosphericInformationService;
 
-    public RestWeatherQueryEndpoint() {
-        airportService = new AirportServiceImpl();
-        atmosphericInformationService = new AtmosphericInformationServiceImpl();
+  /**
+   * Weather metrics provider, used to recollect data on all the services, this is used in all
+   * operations and retrieve health and status information
+   */
+  private WeatherMetricsProvider weatherMetricsProvider;
+
+  public RestWeatherQueryEndpoint() {
+    airportService = new AirportServiceImpl();
+    atmosphericInformationService = new AtmosphericInformationServiceImpl();
+    weatherMetricsProvider = WeatherMetricsProvider.getInstance();
+  }
+
+  /**
+   * Retrieve health and status information for the the query api. Returns information about how the
+   * number of data points currently held in memory, the frequency of requests for each IATA code
+   * and the frequency of requests for each radius.
+   *
+   * @return a JSON formatted dict with health information.
+   */
+  @Override
+  @GET
+  @Path("/ping")
+  public String ping() {
+    Map<String, Object> metrics = new HashMap<>();
+    // Get the data size of the atmospheric information
+    metrics.put("datasize", weatherMetricsProvider.getAtmosphericInfoDataSize());
+    // Get the airport metrics
+    metrics.put("iata_freq", weatherMetricsProvider.getAirportMetrics());
+    // Get the radius metrics
+    metrics.put("radius_freq", weatherMetricsProvider.getRadiusMetrics());
+    // Log the metrics data.
+    LOGGER.log(Level.INFO, "Getting the metrics information " + metrics);
+    // Return a new Json file.
+    return GsonFactory.toJson(metrics);
+  }
+
+  /**
+   * Given a query in json format {'iata': CODE, 'radius': km} extracts the requested airport
+   * information and return a list of matching atmosphere information.
+   *
+   * @param iata the iataCode
+   * @param radiusString the radius in km
+   * @return a list of atmospheric information
+   */
+  @GET
+  @Path("/weather/{iata}/{radius}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response weather(
+      @PathParam("iata") String iata, @PathParam("radius") String radiusString) {
+    Double radius = ConstantHelper.getValidDouble(radiusString);
+    if (radius == Double.NaN) {
+      // Log a warning that a invalid radius was introduced.
+      LOGGER.log(
+          Level.WARNING,
+          "Invalid radius trying to get the weather data for the airport "
+              + iata
+              + " with radius "
+              + radiusString);
+      return Response.status(Response.Status.BAD_REQUEST).entity("Invalid radius string").build();
     }
+    // Update the request frequency
+    updateRequestFrequency(iata, radius);
+    // Get all airports in the given radius.
+    List<AirportData> airportData = airportService.getAirportDataInRadius(iata, radius);
+    // Return all airports' atmospheric information for the given radius.
+    return Response.status(Response.Status.OK)
+        .entity(atmosphericInformationService.getAtmosphericInformationForAirports(airportData))
+        .build();
+  }
 
-    /** atmospheric information for each airport, idx corresponds with airportData */
-    protected List<AtmosphericInformation> atmosphericInformation = Collections.synchronizedList(new LinkedList<>());
-
-    /**
-     * Internal performance counter to better understand most requested information, this map can be improved but
-     * for now provides the basis for future performance optimizations. Due to the stateless deployment architecture
-     * we don't want to write this to disk, but will pull it off using a REST request and aggregate with other
-     * performance metrics {@link #ping()}
-     */
-    public Map<AirportData, Integer> requestFrequency = new HashMap<AirportData, Integer>();
-
-    public Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
-
-    /**
-     * Retrieve service health including total size of valid data points and request frequency information.
-     *
-     * @return health stats for the service as a string
-     */
-    @Override
-    @GET
-    @Path("/ping")
-    public String ping() {
-        Map<String, Object> retval = new HashMap<>();
-
-        long datasize = atmosphericInformationService.getAllAtmosphericInformation().stream()
-            .filter(atmospheicInfo ->
-                atmospheicInfo.getLastUpdateTime() > System.currentTimeMillis() - ConstantHelper.ONE_DAY)
-            .count();
-
-        retval.put("datasize", datasize);
-
-        Map<String, Double> freq = new HashMap<>();
-        // fraction of queries
-        for (AirportData data : airportService.getAllAirportData()) {
-            double frac = (double)requestFrequency.getOrDefault(data, 0) / requestFrequency.size();
-            freq.put(data.getIata(), frac);
-        }
-        retval.put("iata_freq", freq);
-
-        int m = radiusFreq.keySet().stream()
-                .max(Double::compare)
-                .orElse(1000.0).intValue() + 1;
-
-        int[] hist = new int[m];
-        for (Map.Entry<Double, Integer> e : radiusFreq.entrySet()) {
-            int i = e.getKey().intValue() % 10;
-            hist[i] += e.getValue();
-        }
-        retval.put("radius_freq", hist);
-
-        return GsonFactory.toJson(retval);
-    }
-
-    /**
-     * Given a query in json format {'iata': CODE, 'radius': km} extracts the requested airport information and
-     * return a list of matching atmosphere information.
-     *
-     * @param iata the iataCode
-     * @param radiusString the radius in km
-     *
-     * @return a list of atmospheric information
-     */
-    @GET
-    @Path("/weather/{iata}/{radius}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response weather(@PathParam("iata") String iata, @PathParam("radius") String radiusString) {
-        double radius = radiusString == null || radiusString.trim().isEmpty() ? 0 : Double.valueOf(radiusString);
-        updateRequestFrequency(iata, radius);
-        List<AirportData> airportData = airportService.getAirportDataInRadius(iata, radius);
-        return Response.status(Response.Status.OK)
-            .entity(atmosphericInformationService.getAtmosphericInformationForAirports(airportData))
-            .build();
-    }
-
-    /**
-     * Records information about how often requests are made
-     *
-     * @param iata an iata code
-     * @param radius query radius
-     */
-    public void updateRequestFrequency(String iata, Double radius) {
-        AirportData airportData = airportService.findAirportData(iata);
-        requestFrequency.put(airportData, requestFrequency.getOrDefault(airportData, 0) + 1);
-        radiusFreq.put(radius, radiusFreq.getOrDefault(radius, 0));
-    }
-
+  /**
+   * Records information about how often requests are made
+   *
+   * @param iata an iata code
+   * @param radius query radius
+   */
+  private void updateRequestFrequency(String iata, Double radius) {
+    weatherMetricsProvider.updateAirportMetrics(iata);
+    weatherMetricsProvider.updateRadiusMetrics(radius);
+  }
 }

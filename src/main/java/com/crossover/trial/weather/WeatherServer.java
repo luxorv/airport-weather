@@ -15,10 +15,9 @@ import java.util.logging.Logger;
 
 import static java.lang.String.*;
 
-
 /**
- * This main method will be use by the automated functional grader. You shouldn't move this class or remove the
- * main method. You may change the implementation, but we encourage caution.
+ * This main method will be use by the automated functional grader. You shouldn't move this class or
+ * remove the main method. You may change the implementation, but we encourage caution.
  *
  * @author code test administrator
  */
@@ -35,16 +34,21 @@ public class WeatherServer {
       resourceConfig.register(RestWeatherQueryEndpoint.class);
       resourceConfig.register(JacksonFeature.class);
 
-      HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URL), resourceConfig, false);
+      // initialize the dummy method to add the default airports.
+      RestWeatherCollectorEndpoint.init();
+
+      HttpServer server =
+          GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URL), resourceConfig, false);
       Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdownNow()));
 
-      HttpServerProbe probe = new HttpServerProbe.Adapter() {
-        public void onRequestReceiveEvent(HttpServerFilter filter, Connection connection, Request request) {
-          System.out.println(request.getRequestURI());
-        }
-      };
+      HttpServerProbe probe =
+          new HttpServerProbe.Adapter() {
+            public void onRequestReceiveEvent(
+                HttpServerFilter filter, Connection connection, Request request) {
+              System.out.println(request.getRequestURI());
+            }
+          };
       server.getServerConfiguration().getMonitoringConfig().getWebServerConfig().addProbes(probe);
-
 
       // the autograder waits for this output before running automated tests, please don't remove it
       server.start();

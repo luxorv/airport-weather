@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
  * The implementation of the Reflection Utils where we set make dynamic operations on objects
  *
  * @author Victor Polanco
- *
  */
 public class ReflectionUtils {
 
@@ -19,7 +18,6 @@ public class ReflectionUtils {
    *
    * @param object as a string
    * @param propertyName as a string
-   *
    * @return {@link Method} reference of the object
    */
   public static Method getMethodFromInstance(Object object, String propertyName)
@@ -32,12 +30,11 @@ public class ReflectionUtils {
   }
 
   /**
-   * Invoke the setMessured<property_name> of a given data point to set the property
+   * Invoke the setMeasured<property_name> of a given data point to set the property
    *
    * @param atmosphericInfo the atmospheric information of the given airport
    * @param propertyName as a string
    * @param dataPoint the data point object to be set
-   *
    * @return {@link Method} reference of the object
    */
   public static void setPropertyToAtmosphericInfo(
@@ -54,5 +51,4 @@ public class ReflectionUtils {
       method.invoke(atmosphericInfo, dataPoint);
     }
   }
-
 }
